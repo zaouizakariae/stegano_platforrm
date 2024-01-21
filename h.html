@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steganography Tool</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        body {
+            background-color: #f7f7f7;
+        }
+        .container {
+            padding-top: 50px;
+        }
+        .custom-file, .algo-select, .btn {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center">Steganography Tool</h2>
+
+        <!-- Upload Support Image Section -->
+        <div class="custom-file">
+            <input type="file" class="custom-file-input" id="supportImageUpload">
+            <label class="custom-file-label" for="supportImageUpload">Choose support image...</label>
+        </div>
+
+        <!-- Secret Input Selection: Image or Text -->
+        <div class="custom-file" id="secretInput">
+            <input type="file" class="custom-file-input" id="secretImageUpload">
+            <label class="custom-file-label" for="secretImageUpload">Choose secret input...</label>
+        </div>
+
+        <!-- Secret Input Type Selector -->
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="inputGroupSelect01">Secret Type</label>
+            </div>
+            <select class="custom-select" id="inputGroupSelect01">
+                <option value="image" selected>Image</option>
+                <option value="text">Text</option>
+            </select>
+        </div>
+
+        <!-- Algorithm Selection -->
+        <div class="algo-select">
+            <label for="algorithmSelect">Choose Algorithm:</label>
+            <select class="form-control" id="algorithmSelect">
+                <option value="LSB">LSB - Least Significant Bit</option>
+                <option value="DCT">DCT - Discrete Cosine Transform</option>
+                <option value="HaarDWT">Haar DWT - Haar Discrete Wavelet Transform</option>
+                <option value="PixelValueDifferencing">Pixel Value Differencing</option>
+                <!-- Add more algorithms as needed -->
+            </select>
+        </div>
+
+        <!-- Encode Button -->
+        <button type="button" class="btn btn-primary btn-block" id="encodeButton">Encode</button>
+
+        <!-- Display Support Image Name -->
+        <div class="mt-3">
+            <p>Selected Support Image: <span id="selectedImageName"></span></p>
+        </div>
+
+        <!-- Display Result Image -->
+        <div class="mt-3">
+            <h4>Result Image:</h4>
+            <img src="" id="resultImage" alt="Result Image" style="max-width: 100%; height: auto;">
+        </div>
+    </div>
+
+    <script>
+        // Function to display the selected support image name
+        function displaySelectedImageName() {
+            const supportImageInput = document.getElementById('supportImageUpload');
+            const selectedImageName = document.getElementById('selectedImageName');
+            if (supportImageInput.files[0]) {
+                selectedImageName.textContent = supportImageInput.files[0].name;
+            } else {
+                selectedImageName.textContent = '';
+            }
+        }
+
+        // Add an event listener to the support image input
+        document.getElementById('supportImageUpload').addEventListener('change', displaySelectedImageName);
+
+        // Add an event listener to the Encode button
+        document.getElementById('encodeButton').addEventListener('click', function() {
+            const supportImageInput = document.getElementById('supportImageUpload');
+            const secretImageInput = document.getElementById('secretImageUpload');
+            const algorithm = document.getElementById('algorithmSelect').value;
+            const resultImage = document.getElementById('resultImage');
+
+            if (!supportImageInput.files[0] || !secretImageInput.files[0]) {
+                alert('Please select both images to encode.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('support_image', supportImageInput.files[0]);
+            formData.append('secret_image', secretImageInput.files[0]);
+            formData.append('algorithm', algorithm); // Send selected algorithm to the server
+
+            fetch('/encode', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                // Display the result image
+                resultImage.src = URL.createObjectURL(blob);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        // Event listener for file input change to display selected file name
+        $('.custom-file-input').on('change', function() {
+            let fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').addClass("selected").html(fileName);
+        });
+    </script>
+</body>
+</html>
